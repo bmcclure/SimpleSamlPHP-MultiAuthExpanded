@@ -1,13 +1,11 @@
 <?php
 require_once(dirname(__FILE__).'/BaseConnector.php');
 class SqlConnector extends BaseConnector {
-	var $authId;
-
 	private $dsn;
 
-	private $username;
+	private $username = null;
 
-	private $password;
+	private $password = null;
 
 	private $authsources_query = 'SELECT * FROM auth_sources WHERE enabled=1';
 
@@ -29,6 +27,8 @@ class SqlConnector extends BaseConnector {
 	 * @param mixed $reserved  For future use.
 	 */
 	public function __construct($authId, $config) {
+		parent::__construct($authId, $config);
+
 		/* Make sure that all required parameters are present. */
 		foreach (array('dsn', 'username', 'password') as $param) {
 			if (!array_key_exists($param, $config)) {
@@ -44,7 +44,6 @@ class SqlConnector extends BaseConnector {
 			}
 		}
 
-		$this->authId = $authId;
 		$this->dsn = $config['dsn'];
 		$this->username = $config['username'];
 		$this->password = $config['password'];
@@ -169,28 +168,6 @@ class SqlConnector extends BaseConnector {
 		}
 
 		return $data;
-	}
-
-	public function fetchUniqueValue(&$request, $authSourceId) {
-		$attributes =& $request['Attributes'];
-
-		$db = $this->connect();
-
-		/*$uniqueAttr = $this->fetchData(
-			$db,
-			$this->unique_attribute_query,
-			array('authSourceId' => $this->authId),
-			"column"
-		);*/
-
-		$uniqueAttr = 'authSourceValue';
-
-		if (!array_key_exists($uniqueAttr, $attributes)) {
-			throw new SimpleSAML_Error_Exception('multiauthsql:' . $this->authId .
-				': - Specified attribute ('.$uniqueAttr.') is not in the list of available attributes from the current authsource ('.$this->authId.').');
-		}
-
-		return $attributes[$uniqueAttr];
 	}
 
 	public function fetchUser(&$request, $authSource) {

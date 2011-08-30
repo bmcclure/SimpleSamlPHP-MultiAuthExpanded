@@ -20,7 +20,18 @@ abstract class BaseConnector {
 
 	abstract public function fetchAuthSourceId($authId = null);
 
-	abstract public function fetchUniqueValue(&$request, $authSourceId);
+	public function fetchUniqueValue(&$request, $authSourceId) {
+		$attributes =& $request['Attributes'];
+
+		$uniqueAttr = 'authSourceValue';
+
+		if (!array_key_exists($uniqueAttr, $attributes)) {
+			throw new SimpleSAML_Error_Exception('multiauth:' . $this->authId .
+				': - Specified attribute ('.$uniqueAttr.') is not in the list of available attributes from the current authsource ('.$this->authId.').');
+		}
+
+		return $attributes[$uniqueAttr][0];
+	}
 
 	abstract public function fetchUser(&$request, $authSource);
 }

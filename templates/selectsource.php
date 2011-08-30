@@ -11,6 +11,10 @@ $this->includeAtTemplateBase('includes/header.php');
 <ul>
 <?php
 foreach($this->data['sources'] as $source) {
+	if (isset($source['AuthSource'])) {
+		$source = $source['AuthSource'];
+	}
+
 	echo '<li><a href="?source=' . htmlspecialchars($source['config_name']) .
 		'&AuthState=' . htmlspecialchars($this->data['authstate']) . '">' .
 		htmlspecialchars($source['name']) . '</a></li>';

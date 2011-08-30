@@ -20,6 +20,10 @@ class sspmod_multiauthexpanded_Auth_Process_AssociateAuth extends SimpleSAML_Aut
 
 	private $populate_attributes = array('authSourceId', 'authSourceValue');
 
+	private $_config;
+
+	private $_reserved;
+
 	/**
 	 * Initialize this filter.
 	 * Validate configuration parameters.
@@ -28,7 +32,8 @@ class sspmod_multiauthexpanded_Auth_Process_AssociateAuth extends SimpleSAML_Aut
 	 * @param mixed $reserved  For future use.
 	 */
 	public function __construct($config, $reserved) {
-		assert('is_array($config)');
+		$this->_config = $config;
+		$this->_reserved = $reserved;
 
 		/* Call the parent constructor first, as required by the interface. */
 		parent::__construct($config, $reserved);
@@ -79,7 +84,13 @@ class sspmod_multiauthexpanded_Auth_Process_AssociateAuth extends SimpleSAML_Aut
 
 		$attributes =& $state['Attributes'];
 
-		$attributes['Auth.User'] = $this->associateUserAccount(&$state);
+		$attributes['AssociateAuthConfig'] = $this->_config;
+		$attributes['AssociateAuthReserved'] = $this->_reserved;
+
+		$user = $this->associateUserAccount(&$state);
+
+		//print_r($attributes);
+		//exit;
 
 		return;
 	}
@@ -92,21 +103,26 @@ class sspmod_multiauthexpanded_Auth_Process_AssociateAuth extends SimpleSAML_Aut
 		$attributes =& $state['Attributes'];
 
 		$session = SimpleSAML_Session::getInstance();
-		$authSourceId = $session->getData(self::SESSION_SOURCE, 'multiauth');
-		$attributes['authSourceId'] = $this->connector->fetchAuthSourceId($authSourceId);
 
-		$user = $this->connector->fetchUser($state, $authSourceId);
+		$authSource = $session->getData(self::SESSION_SOURCE, 'multiauth');
 
-		if (count($users) == 0) {
+		$attributes['authSourceId'] = array($this->connector->fetchAuthSourceId($authSource));
+
+		$user = $this->connector->fetchUser($state, $authSource);
+
+		if (count($user) == 0) {
 			/* Save state and redirect to a page indicating that a user account must exist. */
 
-			$id = SimpleSAML_Auth_State::saveState($state, 'multiauthsql:AssociateAuth');
+			$id = SimpleSAML_Auth_State::saveState($state, 'multiauthexpanded:AssociateAuth');
 
-			$returnUrl = SimpleSAML_Module::getModuleURL('multiauthsql/register.php');
+			$returnUrl = SimpleSAML_Module::getModuleURL('multiauthexpanded/register.php');
 			$returnUrl = SimpleSAML_Utilities::addURLparameter($returnUrl, array('StateId' => $id));
 
 			SimpleSAML_Utilities::redirect($this->create_user_url, $this->getAttributes($attributes, $returnUrl));
 		}
+
+		unset($attributes['AssociateAuthConfig']);
+		unset($attributes['AssociateAuthReserved']);
 
 		return $user;
 	}
@@ -134,16 +150,14 @@ class sspmod_multiauthexpanded_Auth_Process_AssociateAuth extends SimpleSAML_Aut
 	 * @param string $authId	Selected authentication source
 	 * @param array	 $state	 Information about the current authentication.
 	 */
-	public static function verifyRegisteredUser(&$state) {
-		/* Save the selected authentication source for the logout process. */
+	public function verifyRegisteredUser(&$state) {
 		$session = SimpleSAML_Session::getInstance();
+		$authSource = $session->getData(self::SESSION_SOURCE, 'multiauth');
 
-
-		//print_r($user);
-		//exit;
+		$user = $this->connector->fetchUser($state, $authSource);
 
 		if (!isset($user['User']) || !isset($user['User']['id'])) {
-			throw new SimpleSAML_Error_Exception('No user record found in session. Please try to register again.');
+			throw new SimpleSAML_Error_Exception('No user record found. Please try to register again.');
 		}
 
 		$state['Attributes']['Auth.User'] = $user;

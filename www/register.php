@@ -8,8 +8,14 @@ $authStateId = $_REQUEST['StateId'];
 $state = SimpleSAML_Auth_State::loadState($authStateId, 'multiauthexpanded:AssociateAuth');
 
 $session = SimpleSAML_Session::getInstance();
-print_r($_SESSION);
-exit;
 
-sspmod_multiauthsql_Auth_Process_AssociateAuth::verifyRegisteredUser($state);
+$aaConfig = $state['Attributes']['AssociateAuthConfig'];
+$aaReserved = $state['Attributes']['AssociateAuthReserved'];
+
+unset($state['Attributes']['AssociateAuthConfig']);
+unset($state['Attributes']['AssociateAuthReserved']);
+
+$associateAuth = new sspmod_multiauthexpanded_Auth_Process_AssociateAuth($aaConfig, $aaReserved);
+
+$associateAuth->verifyRegisteredUser($state);
 ?>
