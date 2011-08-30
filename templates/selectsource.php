@@ -1,12 +1,12 @@
 <?php
-$this->data['header'] = $this->t('{multiauthsql:multiauthsql:select_source_header}');
+$this->data['header'] = $this->t('{multiauthexpanded:multiauth:select_source_header}');
 
 $this->includeAtTemplateBase('includes/header.php');
 ?>
 
-<h2><?php echo $this->t('{multiauthsql:multiauthsql:select_source_header}'); ?></h2>
+<h2><?php echo $this->t('{multiauthexpanded:multiauth:select_source_header}'); ?></h2>
 
-<p><?php echo $this->t('{multiauthsql:multiauthsql:select_source_text}'); ?></p>
+<p><?php echo $this->t('{multiauthexpanded:multiauth:select_source_text}'); ?></p>
 
 <ul>
 <?php

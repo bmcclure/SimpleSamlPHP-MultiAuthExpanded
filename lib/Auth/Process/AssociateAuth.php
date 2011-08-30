@@ -1,6 +1,4 @@
 <?php
-require_once(dirname(dirname(dirname(__FILE__))).'/multi_auth_sql_db.php');
-
 /**
  * Filter to authorize only certain users.
  * See docs directory.
@@ -9,12 +7,14 @@ require_once(dirname(dirname(dirname(__FILE__))).'/multi_auth_sql_db.php');
  * @package simpleSAMLphp
  * @version $Id$
  */
-class sspmod_multiauthsql_Auth_Process_AssociateAuth extends SimpleSAML_Auth_ProcessingFilter {
-	const SESSION_SOURCE = 'multiauthsql:selectedSource';
+class sspmod_multiauthexpanded_Auth_Process_AssociateAuth extends SimpleSAML_Auth_ProcessingFilter {
+	const SESSION_SOURCE = 'multiauth:selectedSource';
 
-	const AUTHID = 'sspmod_multiauthsql_Auth_Source_MultiAuthSql.AuthId';
+	const AUTHID = 'sspmod_multiauthexpanded_Auth_Source_MultiAuth.AuthId';
 
-	private $db;
+	private $connectorName;
+
+	private $connector;
 
 	private $create_user_url;
 
@@ -47,7 +47,12 @@ class sspmod_multiauthsql_Auth_Process_AssociateAuth extends SimpleSAML_Auth_Pro
 			}
 		}
 
-		$this->db = new MultiAuthSqlDb(null, $config);
+		$connectorName = $config['connector'].'Connector';
+		$this->connectorName = $connectorName;
+
+		require_once(dirname(dirname(dirname(__FILE__))).'/Connector/'.$connectorName.'.php');
+
+		$this->connector = new $connectorName(null, $config);
 
 		$this->create_user_url = $config['create_user_url'];
 
@@ -87,10 +92,10 @@ class sspmod_multiauthsql_Auth_Process_AssociateAuth extends SimpleSAML_Auth_Pro
 		$attributes =& $state['Attributes'];
 
 		$session = SimpleSAML_Session::getInstance();
-		$authSourceId = $session->getData(self::SESSION_SOURCE, 'multiauthsql');
-		$attributes['authSourceId'] = $this->db->fetchAuthSourceId($authSourceId);
+		$authSourceId = $session->getData(self::SESSION_SOURCE, 'multiauth');
+		$attributes['authSourceId'] = $this->connector->fetchAuthSourceId($authSourceId);
 
-		$users = $this->db->fetchUsers($state, $authSourceId);
+		$user = $this->connector->fetchUser($state, $authSourceId);
 
 		if (count($users) == 0) {
 			/* Save state and redirect to a page indicating that a user account must exist. */
@@ -103,7 +108,7 @@ class sspmod_multiauthsql_Auth_Process_AssociateAuth extends SimpleSAML_Auth_Pro
 			SimpleSAML_Utilities::redirect($this->create_user_url, $this->getAttributes($attributes, $returnUrl));
 		}
 
-		return $users[0];
+		return $user;
 	}
 
 	private function getAttributes(&$attributes, $returnUrl) {

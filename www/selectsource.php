@@ -16,17 +16,17 @@ if (!array_key_exists('AuthState', $_REQUEST)) {
 $authStateId = $_REQUEST['AuthState'];
 
 /* Retrieve the authentication state. */
-$state = SimpleSAML_Auth_State::loadState($authStateId, sspmod_multiauthsql_Auth_Source_MultiAuthSql::STAGEID);
+$state = SimpleSAML_Auth_State::loadState($authStateId, sspmod_multiauthexpanded_Auth_Source_MultiAuth::STAGEID);
 
 if (array_key_exists('source', $_REQUEST)) {
 	$source = $_REQUEST['source'];
-	sspmod_multiauthsql_Auth_Source_MultiAuthSql::delegateAuthentication($source, $state);
+	sspmod_multiauthexpanded_Auth_Source_MultiAuth::delegateAuthentication($source, $state);
 }
 
 $globalConfig = SimpleSAML_Configuration::getInstance();
-$t = new SimpleSAML_XHTML_Template($globalConfig, 'multiauthsql:selectsource.php');
+$t = new SimpleSAML_XHTML_Template($globalConfig, 'multiauthexpanded:selectsource.php');
 $t->data['authstate'] = $authStateId;
-$t->data['sources'] = $state[sspmod_multiauthsql_Auth_Source_MultiAuthSql::SOURCESID];
+$t->data['sources'] = $state[sspmod_multiauthexpanded_Auth_Source_MultiAuth::SOURCESID];
 $t->show();
 exit();
 

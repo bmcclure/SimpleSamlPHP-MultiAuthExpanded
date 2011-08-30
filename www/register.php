@@ -5,7 +5,7 @@ if (!array_key_exists('StateId', $_REQUEST)) {
 $authStateId = $_REQUEST['StateId'];
 
 /* Retrieve the authentication state. */
-$state = SimpleSAML_Auth_State::loadState($authStateId, 'multiauthsql:AssociateAuth');
+$state = SimpleSAML_Auth_State::loadState($authStateId, 'multiauthexpanded:AssociateAuth');
 
 $session = SimpleSAML_Session::getInstance();
 print_r($_SESSION);
